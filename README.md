@@ -10,6 +10,7 @@ A RESTful API for managing a to-do list, built as part of an Introduction to Bac
 - **Dev Runner:** tsx
 - **Auto-restart:** nodemon
 - **ID Generation:** uuid
+- **Environment:** dotenv
 - **Package Manager:** Yarn
 
 ## Project Structure
@@ -18,20 +19,35 @@ A RESTful API for managing a to-do list, built as part of an Introduction to Bac
 task-manager-api/
 ├── src/
 │   ├── app.ts
+│   ├── controllers/
+│   │   └── tasks.controller.ts
+│   ├── routes/
+│   │   └── tasks.routes.ts
+│   ├── middleware/
+│   │   ├── logger.ts
+│   │   ├── notFound.ts
+│   │   └── errorHandler.ts
 │   ├── data/
 │   │   └── tasks.ts
 │   └── types/
 │       └── types.ts
 ├── dist/
+├── .env
 ├── tsconfig.json
 ├── tsconfig.dev.json
 ├── nodemon.json
 └── package.json
 ```
 
-- `src/app.ts` — entry point, Express server setup, route definitions, and middleware registration
+- `src/app.ts` — entry point, Express server setup, middleware registration, and router mounting
+- `src/controllers/tasks.controller.ts` — route handler logic for all task operations
+- `src/routes/tasks.routes.ts` — route definitions that map endpoints to controller functions
+- `src/middleware/logger.ts` — logs incoming requests with timestamp, method, and path
+- `src/middleware/notFound.ts` — handles requests to undefined routes
+- `src/middleware/errorHandler.ts` — global error handler for unexpected errors
 - `src/data/tasks.ts` — hardcoded array of seed tasks used as the in-memory data store
 - `src/types/types.ts` — shared TypeScript type definitions
+- `.env` — environment variables (port configuration)
 - `tsconfig.json` — TypeScript config for production builds via `tsc`
 - `tsconfig.dev.json` — extends `tsconfig.json`, enables `allowImportingTsExtensions` for development
 - `nodemon.json` — nodemon config that watches `src` and restarts using `tsx`
@@ -52,6 +68,10 @@ task-manager-api/
 3. Install dependencies:
    ```
    yarn install
+   ```
+4. Create a `.env` file in the root:
+   ```
+   PORT=3000
    ```
 
 ## Running the Project
@@ -75,7 +95,7 @@ Base URL: `http://localhost:3000`
 
 ### Get all tasks
 ```
-GET /tasks
+GET /api/tasks
 ```
 Returns an array of all tasks.
 
@@ -94,7 +114,7 @@ Returns an array of all tasks.
 
 ### Get a task by ID
 ```
-GET /tasks/:id
+GET /api/tasks/:id
 ```
 Returns a single task matching the given ID.
 
@@ -116,7 +136,7 @@ Returns a single task matching the given ID.
 
 ### Create a task
 ```
-POST /tasks
+POST /api/tasks
 ```
 Creates a new task. `title` is required.
 
@@ -150,7 +170,7 @@ Creates a new task. `title` is required.
 
 ### Update a task
 ```
-PUT /tasks/:id
+PUT /api/tasks/:id
 ```
 Updates one or more fields on an existing task. Only `title`, `description`, `completed`, and `priority` are accepted. `id` cannot be changed.
 
@@ -185,7 +205,7 @@ Updates one or more fields on an existing task. Only `title`, `description`, `co
 
 ### Delete a task
 ```
-DELETE /tasks/:id
+DELETE /api/tasks/:id
 ```
 Removes a task by ID.
 
@@ -213,15 +233,30 @@ type Task = {
 
 ## Middleware
 
-**Request Logger** — logs the HTTP method and path of every incoming request to the console.
+**Request Logger** — logs the HTTP method, path, and timestamp of every incoming request to the console.
 
 ```
-GET /tasks
-POST /tasks
-DELETE /tasks/uuid
+[2025-01-15T10:30:45.123Z] GET /api/tasks
+[2025-01-15T10:30:47.456Z] POST /api/tasks
+[2025-01-15T10:30:50.789Z] DELETE /api/tasks/uuid
 ```
+
+**404 Handler** — catches requests to undefined routes and returns a JSON error response.
+
+**Global Error Handler** — catches unexpected errors and returns a consistent JSON error response with status 500.
+
+## MVC Architecture
+
+The project follows the Model-View-Controller pattern:
+
+- **Model** — `src/data/tasks.ts` and `src/types/types.ts` define the data structure and storage
+- **Controller** — `src/controllers/tasks.controller.ts` contains the business logic for each operation
+- **Routes** — `src/routes/tasks.routes.ts` maps HTTP methods and paths to controller functions
+
+This separation keeps the codebase organized and makes each component easier to test and maintain.
 
 ## Notes
 
 - Data is stored in memory. All changes are lost when the server restarts.
 - The seed data in `src/data/tasks.ts` is loaded once at startup.
+- Environment variables are managed via `.env` and loaded with `dotenv`.
