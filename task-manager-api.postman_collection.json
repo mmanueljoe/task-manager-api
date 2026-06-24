@@ -1,0 +1,298 @@
+{
+  "info": {
+    "name": "Task Manager API",
+    "description": "CRUD endpoints for the RESTful Task Tracker. Set the baseUrl variable to your running server, then use Run Collection to execute every request in order.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "taskId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "CRUD",
+      "item": [
+        {
+          "name": "Get All Tasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('success is true', () => pm.expect(body.success).to.be.true);",
+                  "pm.test('data is an array', () => pm.expect(body.data).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Write Postman collection\",\n  \"description\": \"Document every endpoint for the reviewer\",\n  \"priority\": \"high\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('success is true', () => pm.expect(body.success).to.be.true);",
+                  "pm.test('data has an id', () => pm.expect(body.data.id).to.be.a('string'));",
+                  "pm.test('returns a message', () => pm.expect(body.message).to.be.a('string'));",
+                  "",
+                  "pm.collectionVariables.set('taskId', body.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Task By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/{{taskId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "{{taskId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('success is true', () => pm.expect(body.success).to.be.true);",
+                  "pm.test('returns the requested task', () => pm.expect(body.data.id).to.eql(pm.collectionVariables.get('taskId')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Task",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"completed\": true,\n  \"priority\": \"medium\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/{{taskId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "{{taskId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('success is true', () => pm.expect(body.success).to.be.true);",
+                  "pm.test('returns the updated task', () => pm.expect(body.data.completed).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Task",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/{{taskId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "{{taskId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('success is true', () => pm.expect(body.success).to.be.true);",
+                  "pm.test('returns a message', () => pm.expect(body.message).to.be.a('string'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Error Cases",
+      "item": [
+        {
+          "name": "Create Task - Missing Title",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"No title provided\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('success is false', () => pm.expect(body.success).to.be.false);",
+                  "pm.test('returns an error message', () => pm.expect(body.message).to.be.a('string'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Task - Not Found",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/does-not-exist",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "does-not-exist"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));",
+                  "pm.test('success is false', () => pm.expect(body.success).to.be.false);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Task - Invalid Priority",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"priority\": \"urgent\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/does-not-exist",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", "does-not-exist"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('success is false', () => pm.expect(body.success).to.be.false);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unknown Route",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/unknown",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "unknown"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));",
+                  "pm.test('success is false', () => pm.expect(body.success).to.be.false);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

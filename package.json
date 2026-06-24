@@ -1,12 +1,12 @@
 {
   "name": "task-manager-api",
   "version": "1.0.0",
-  "main": "app.js",
+  "main": "server.js",
   "type": "module",
   "scripts": {
     "dev": "nodemon",
     "build": "tsc",
-    "start": "node dist/app.js"
+    "start": "node dist/server.js"
   },
   "license": "MIT",
   "dependencies": {

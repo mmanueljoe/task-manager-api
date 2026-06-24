@@ -1,7 +1,6 @@
-import { type Request, type Response } from "express";
+import { type Request, type Response, type NextFunction } from "express";
+import { AppError } from "../utils/AppError.js";
 
-
-// 404 handler
-export const notFoundHandler = (_req: Request, res: Response) => {
-  res.status(404).json({ message: "Route not found" });
+export const notFoundHandler = (req: Request, _res: Response, next: NextFunction): void => {
+  next(new AppError(`Route not found: ${req.method} ${req.originalUrl}`, 404));
 };

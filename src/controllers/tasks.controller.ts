@@ -1,97 +1,90 @@
-import { type Request, type Response } from "express";
-import { TASK_DATA as tasks } from "../data/tasks.js";
-import { v4 as uuidv4 } from "uuid";
-import { type Task } from "../types/types.js";
+import { type Request, type Response, type NextFunction } from "express";
+import {
+  findAllTasks,
+  findTaskById,
+  insertTask,
+  modifyTask,
+  deleteTaskById,
+} from "../models/task.model.js";
+import { AppError } from "../utils/AppError.js";
+import { sendSuccess } from "../utils/response.js";
 
-const getAllTasks = (_req: Request, res: Response) => {
-  return res.status(200).json(tasks);
+const allowedPriorities = new Set(["low", "medium", "high"]);
+
+const getAllTasks = (_req: Request, res: Response): Response => {
+  return sendSuccess(res, 200, findAllTasks());
 };
 
-const getTaskById = (req: Request, res: Response) => {
+const getTaskById = (req: Request, res: Response, next: NextFunction): Response | void => {
   const { id } = req.params;
-  const task = tasks.find((task) => task.id === id);
+
+  if (typeof id !== "string") {
+    return next(new AppError("Task not found", 404));
+  }
+
+  const task = findTaskById(id);
 
   if (!task) {
-    return res.status(404).json({ message: "Task not found" });
+    return next(new AppError("Task not found", 404));
   }
 
-  return res.status(200).json(task);
+  return sendSuccess(res, 200, task);
 };
 
-const createTask = (req: Request, res: Response) => {
-  const newTask = req.body;
+const createTask = (req: Request, res: Response, next: NextFunction): Response | void => {
+  const { title, description, priority } = req.body;
 
-  if (!newTask.title) {
-    return res.status(400).json({ message: "Title is required" });
+  if (!title) {
+    return next(new AppError("Title is required", 400));
   }
 
-  const task = {
-    id: uuidv4(),
-    title: newTask.title,
-    description: newTask.description ?? "",
-    completed: false,
-    priority: newTask.priority ?? "low",
-  };
+  if (priority !== undefined && !allowedPriorities.has(priority)) {
+    return next(new AppError("Priority must be low, medium, or high", 400));
+  }
 
-  tasks.push(task);
-
-  return res.status(201).json({ task, message: "Task created successfully" });
+  const task = insertTask({ title, description, priority });
+  return sendSuccess(res, 201, task, "Task created successfully");
 };
 
-
-
-
-const updateTask = (req: Request, res: Response) => {
+const updateTask = (req: Request, res: Response, next: NextFunction): Response | void => {
   const { id } = req.params;
   const { title, description, completed, priority } = req.body;
-  const taskIndex = tasks.findIndex((task) => task.id === id);
 
-  if (taskIndex === -1) {
-    return res.status(404).json({ message: "Task not found" });
+  if (typeof id !== "string") {
+    return next(new AppError("Task not found", 404));
   }
 
-  const validPriorities = ["low", "medium", "high"];
-
-  if (priority !== undefined && !validPriorities.includes(priority)) {
-    return res
-      .status(400)
-      .json({ message: "Priority must be low, medium, or high" });
+  if (priority !== undefined && !allowedPriorities.has(priority)) {
+    return next(new AppError("Priority must be low, medium, or high", 400));
   }
 
   if (completed !== undefined && typeof completed !== "boolean") {
-    return res.status(400).json({ message: "Completed must be a boolean" });
+    return next(new AppError("Completed must be a boolean", 400));
   }
 
-  tasks[taskIndex] = {
-    ...tasks[taskIndex],
-    ...(title !== undefined && { title }),
-    ...(description !== undefined && { description }),
-    ...(completed !== undefined && { completed }),
-    ...(priority !== undefined && { priority }),
-  } as Task;
+  const updatedTask = modifyTask(id, { title, description, completed, priority });
 
-  return res.status(200).json({ message: "Task updated successfully" });
+  if (!updatedTask) {
+    return next(new AppError("Task not found", 404));
+  }
+
+  return sendSuccess(res, 200, updatedTask, "Task updated successfully");
 };
 
-
-const deleteTask = (req: Request, res: Response) => {
+const deleteTask = (req: Request, res: Response, next: NextFunction): Response | void => {
   const { id } = req.params;
-  const taskIndex = tasks.findIndex((task) => task.id === id);
 
-  if (taskIndex === -1) {
-    return res.status(404).json({ message: "Task not found" });
+  if (typeof id !== "string") {
+    return next(new AppError("Task not found", 404));
   }
 
-  tasks.splice(taskIndex, 1);
+  const deleted = deleteTaskById(id);
 
-  return res.status(200).json({ message: "Task deleted successfully" });
+  if (!deleted) {
+    return next(new AppError("Task not found", 404));
+  }
+
+  return sendSuccess(res, 200, undefined, "Task deleted successfully");
 };
 
-
-export {
-  getAllTasks,
-  getTaskById,
-  createTask,
-  updateTask,
-  deleteTask,
-};
+export { getAllTasks, getTaskById, createTask, updateTask, deleteTask };
