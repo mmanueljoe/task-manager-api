@@ -10,11 +10,16 @@ export type Task = {
 
 export type NewTaskInput = {
   title: string;
-  description?: string;
-  priority?: Priority;
+  description?: string | undefined;
+  priority?: Priority | undefined;
 };
 
-export type TaskChanges = Partial<Omit<Task, "id">>;
+export type TaskChanges = {
+  title?: string | undefined;
+  description?: string | undefined;
+  completed?: boolean | undefined;
+  priority?: Priority | undefined;
+};
 
 export type SuccessResponse<T> = {
   success: true;

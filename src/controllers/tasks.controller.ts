@@ -8,80 +8,63 @@ import {
 } from "../models/task.model.js";
 import { AppError } from "../utils/AppError.js";
 import { sendSuccess } from "../utils/response.js";
+import { createTaskSchema, updateTaskSchema } from "../validations/task.validation.js";
+import type { ZodError } from "zod";
 
-const allowedPriorities = new Set(["low", "medium", "high"]);
+const formatZodError = (error: ZodError): string =>
+  error.issues
+    .map((issue) => (issue.path.length > 0 ? `${issue.path.join(".")}: ${issue.message}` : issue.message))
+    .join("; ");
 
 const getAllTasks = (_req: Request, res: Response): Response => {
   return sendSuccess(res, 200, findAllTasks());
 };
 
 const getTaskById = (req: Request, res: Response, next: NextFunction): Response | void => {
-  const { id } = req.params;
-
-  if (typeof id !== "string") {
-    return next(new AppError("Task not found", 404));
-  }
-
+  const { id } = req.params as { id: string };
   const task = findTaskById(id);
 
   if (!task) {
-    return next(new AppError("Task not found", 404));
+    return next(AppError.notFound("Task not found"));
   }
 
   return sendSuccess(res, 200, task);
 };
 
 const createTask = (req: Request, res: Response, next: NextFunction): Response | void => {
-  const { title, description, priority } = req.body;
+  const result = createTaskSchema.safeParse(req.body);
 
-  if (!title) {
-    return next(new AppError("Title is required", 400));
+  if (!result.success) {
+    return next(AppError.badRequest(formatZodError(result.error)));
   }
 
-  if (priority !== undefined && !allowedPriorities.has(priority)) {
-    return next(new AppError("Priority must be low, medium, or high", 400));
-  }
-
-  const task = insertTask({ title, description, priority });
+  const task = insertTask(result.data);
   return sendSuccess(res, 201, task, "Task created successfully");
 };
 
 const updateTask = (req: Request, res: Response, next: NextFunction): Response | void => {
-  const { id } = req.params;
-  const { title, description, completed, priority } = req.body;
+  const { id } = req.params as { id: string };
+  const result = updateTaskSchema.safeParse(req.body);
 
-  if (typeof id !== "string") {
-    return next(new AppError("Task not found", 404));
+  if (!result.success) {
+    return next(AppError.badRequest(formatZodError(result.error)));
   }
 
-  if (priority !== undefined && !allowedPriorities.has(priority)) {
-    return next(new AppError("Priority must be low, medium, or high", 400));
-  }
-
-  if (completed !== undefined && typeof completed !== "boolean") {
-    return next(new AppError("Completed must be a boolean", 400));
-  }
-
-  const updatedTask = modifyTask(id, { title, description, completed, priority });
+  const updatedTask = modifyTask(id, result.data);
 
   if (!updatedTask) {
-    return next(new AppError("Task not found", 404));
+    return next(AppError.notFound("Task not found"));
   }
 
   return sendSuccess(res, 200, updatedTask, "Task updated successfully");
 };
 
 const deleteTask = (req: Request, res: Response, next: NextFunction): Response | void => {
-  const { id } = req.params;
-
-  if (typeof id !== "string") {
-    return next(new AppError("Task not found", 404));
-  }
-
+  const { id } = req.params as { id: string };
   const deleted = deleteTaskById(id);
 
   if (!deleted) {
-    return next(new AppError("Task not found", 404));
+    return next(AppError.notFound("Task not found"));
   }
 
   return sendSuccess(res, 200, undefined, "Task deleted successfully");

@@ -136,11 +136,11 @@ export const modifyTask = (id: string, changes: TaskChanges): Task | undefined =
   }
 
   const updated: Task = {
-    ...existing,
-    ...(changes.title !== undefined && { title: changes.title }),
-    ...(changes.description !== undefined && { description: changes.description }),
-    ...(changes.completed !== undefined && { completed: changes.completed }),
-    ...(changes.priority !== undefined && { priority: changes.priority }),
+    id: existing.id,
+    title: changes.title ?? existing.title,
+    description: changes.description ?? existing.description,
+    completed: changes.completed ?? existing.completed,
+    priority: changes.priority ?? existing.priority,
   };
 
   tasks[index] = updated;
