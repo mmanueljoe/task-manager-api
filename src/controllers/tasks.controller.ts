@@ -10,7 +10,6 @@ import { AppError } from "../utils/AppError.js";
 import { sendSuccess } from "../utils/response.js";
 import { createTaskSchema, updateTaskSchema } from "../validations/task.validation.js";
 import type { ZodError } from "zod";
-import type { Task } from "../types/types.js";
 
 const formatZodError = (error: ZodError): string =>
   error.issues
