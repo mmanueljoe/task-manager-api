@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { type Task, type NewTaskInput, type TaskChanges } from "../types/types.js";
+import { type NewTaskInput, type Task, type TaskChanges } from "../types/types.js";
 
 const tasks: Task[] = [
   {
@@ -109,7 +109,7 @@ const tasks: Task[] = [
   },
 ];
 
-export const findAllTasks = (): Task[] => tasks;
+export const findAllTasks = (): Task[] => [...tasks];
 
 export const findTaskById = (id: string): Task | undefined =>
   tasks.find((task) => task.id === id);
